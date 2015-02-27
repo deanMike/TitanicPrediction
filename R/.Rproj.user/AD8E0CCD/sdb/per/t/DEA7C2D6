@@ -1,0 +1,17 @@
+{
+    "contents" : "#Mike Dean - Titanic Predictions Using R\nsetwd(\"C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R\")\ntrain <- read.csv(\"C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R/data/train.csv\")\ntest <- read.csv(\"C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R/data/test.csv\")\n\nstr(train)\n\ntable(train$Survived)\n\nprop.table(table(train$Survived))\n\ntest$Survived <- rep(0,418)\nsubmit <- data.frame(PassengerId = test$PassengerId, Survived = test$Survived)\nwrite.csv(submit, file = \"theyallperish.csv\", row.names = FALSE)\n\n",
+    "created" : 1418268860134.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4077480981",
+    "id" : "DEA7C2D6",
+    "lastKnownWriteTime" : 1416866191,
+    "path" : "C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R/TitanicAnalysis.R",
+    "project_path" : "TitanicAnalysis.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

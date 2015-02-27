@@ -1,0 +1,17 @@
+{
+    "contents" : "#Mike Dean - Titanic Predictions Using R\n#Sets working directory\nsetwd(\"C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R\")\n#Sets the train and test data to the csv files provided from Kaggle.com\ntrain <- read.csv(\"data/train.csv\")\ntest <- read.csv(\"data/test.csv\")\n##Import Recursive Partitioning and Regression Trees package\nlibrary(rpart)\n## Run a fitting algorithm on the training data set to generate a classification tree\nfit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data = train, method = \"class\")\n## Plot the decision tree\nplot(fit)\ntext(fit)\n##Setting up better visualization packages.\ninstall.packages('rattle')\ninstall.packages('rpart.plot')\ninstall.packages('RColorBrewer')\nlibrary(rattle)\nlibrary(rpart.plot)\nlibrary(RColorBrewer)\n##Better looking decision tree.\nfancyRpartPlot(fit, cex = 1)\n##Run the decision tree algorithm on the training data.\nPrediction <- predict(fit, test, type = \"class\")\n##Store the correct columns only in the submit variable\nsubmit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)\n##Output a submiittable csv file.\nwrite.csv(submit, file = \"output/DecisionTree.csv\", row.names = FALSE)\n##Find the default limits of a standard decision tree in rpart\n?rpart.control\n##Playing with the parameters of the decision tree.\nfit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data = train, method = \"class\", control = rpart.control(minsplit = 5, cp = 0.001))\nfancyRpartPlot(fit)\n##Above performed much worse on the dataset, this is an example of overfitting.\nfit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data = train, method = \"class\", control = rpart.control(minSplit = 10, cp = 0))\nfancyRpartPlot(fit)\n##Pruning decision tree by hand\nnew.fit <- prp(fit,snip=TRUE)$obj\nfancyRpartPlot(new.fit)\n\n",
+    "created" : 1418268854240.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2882936642",
+    "id" : "411D73EA",
+    "lastKnownWriteTime" : 1417659565,
+    "path" : "C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R/DecisionTrees.R",
+    "project_path" : "DecisionTrees.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

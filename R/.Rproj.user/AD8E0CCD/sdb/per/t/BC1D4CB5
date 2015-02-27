@@ -1,0 +1,17 @@
+{
+    "contents" : "#Mike Dean - Titanic Predictions Using R\n#Sets working directory\nsetwd(\"C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R\")\n#Sets the train and test data to the csv files provided from Kaggle.com\ntrain <- read.csv(\"data/train.csv\")\ntest <- read.csv(\"data/test.csv\")\n##Sample the test data\nsample(1:10, replace = TRUE)\ncombination <- rbind(train, test)\nsummary(combination$Age)\n\nAgefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize, data=combination[!is.na(combination$Age),], method=\"anova\")\n\ncombination$Age[is.na(combination$Age)] <- predict(Agefit, combination[is.na(combination$Age),])\n\nsummary(combination)\n\nsummary(combination$Embarked)\n\nwhich(combination$Embarked == '')\n\ncombination$Embarked[c(62, 830)] = \"S\"\n\ncombination$Embarked <- factor(combination$Embarked)\n\nsummary(combination$Fare)\n\nwhich(is.na(combination$Fare))\ncombination$Fare[1024] <- median(combination$Fare, na.rm = TRUE)\n\ncombination$FamilyID2 <- combination$FamilyID\ncombination$FamilyID2 <- as.character(combination$FamilyID2)\ncombination$FamilyID2[combination$FamilySize <= 3] <- 'Small'\ncombination$FamilyID2 <- factor(combination$FamilyID2)\n\ntrain <- combination[1:891,]\ntest <- combination[892:1309,]\n\ninstall.packages('randomForest')\nlibrary(randomForest)\nset.seed(415)\n\nfit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2, data=train, importance=TRUE, ntree=2000)\n\nPrediction <- predict(fit, test, type = \"class\")\n##Store the correct columns only in the submit variable\nsubmit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)\n##Output a submiittable csv file.\nwrite.csv(submit, file = \"output/RandomForest.csv\", row.names = FALSE)\nfancyRpartPlot(fit)\n\n",
+    "created" : 1417659536925.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3385522187",
+    "id" : "BC1D4CB5",
+    "lastKnownWriteTime" : 1416881852,
+    "path" : "C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R/RandomForest.R",
+    "project_path" : "RandomForest.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

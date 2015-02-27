@@ -1,0 +1,17 @@
+{
+    "contents" : "#Mike Dean - Titanic Predictions Using R\n#Sets working directory\nsetwd(\"C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R\")\n#Sets the train and test data to the csv files provided from Kaggle.com\ntrain <- read.csv(\"data/train.csv\")\ntest <- read.csv(\"data/test.csv\")\n#Outputs the number of men and the number of women in the training set\nsummary(train$Sex)\n#Creates an incorrect proportion table based on Sex\nprop.table(table(train$Sex, train$Survived))\n#Creates a proportion table based on Sex of passenger\nprop.table(table(train$Sex, train$Survived), 1)\n##Estimates that everyone died.\ntest$Survived <- 0\n##Estimates that all females survived\ntest$Survived[test$Sex == \"female\"] <- 1\n#Gives statistics of the ages of passengers\nsummary(train$Age)\n#Creates a new category in the training set called \"Child\" and sets the value to '0' for all passengers.\ntrain$Child <- 0\n#Sets the Child variable to true for all passengers under 16\ntrain$Child[train$Age < 16] <- 1\n##Shows the number of survivors broken down by Sex and whether they were children\naggregate(Survived ~ Child + Sex, data = train, FUN=sum)\n##Shows the number of passengers broken down by Sex and whether they were children.\naggregate(Survived ~ Child + Sex, data = train, FUN=length)\n##Finds the proportion of survivors to number of passengers broken down by sex and whether they were children.\naggregate(Survived ~ Child + Sex, data = train, FUN = function(x) {sum(x) / length(x)})\n#Creates a new variables called Fare2 and sets it to '30+'\ntrain$Fare2 <- '30+'\n#Take values from the original Fare column and sets to '20-30' if it falls in that range.\ntrain$Fare2[train$Fare < 30 & train$Fare >= 20] <- '20-30'\n#Assigns anything between 10 and 20 in the fare column to '10-20'.\ntrain$Fare2[train$Fare < 20 & train$Fare >= 10] <- '10-20'\n#Assigns remaining values to '<10'.\ntrain$Fare2[train$Fare < 10] <- '<10'\n\n##Shows the proportion of survivors based on Fare threshold, Class, and Sex.\naggregate(Survived ~ Fare2 + Pclass + Sex, data = train, FUN = function(x) {sum(x)/length(x)})\n\n##Predicting Survival rate based on above aggregation\ntest$Survived <- 0\ntest$Survived[test$Sex == 'female'] <- 1\ntest$Survived[test$Sex == 'female' & test$Pclass == 3 & test$Fare2 == '30+'] <- 0\n\nsubmit <- data.frame(PassengerId = test$PassengerId, Survived = test$Survived)\nwrite.csv(submit, file = \"output/GenderClassModel.csv\", row.names = FALSE)\n",
+    "created" : 1418268840264.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "24896184",
+    "id" : "CF47C5A9",
+    "lastKnownWriteTime" : 1416868608,
+    "path" : "C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R/GenderClassModel.R",
+    "project_path" : "GenderClassModel.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

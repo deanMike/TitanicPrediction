@@ -1,0 +1,512 @@
+test <- combination[892:1309,]
+install.packages('randomForest')
+library(randomForest)
+set.seed(415)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2, data=train, importance=TRUE, ntree=2000)
+Prediction <- predict(fit, test, type = "class")
+##Store the correct columns only in the submit variable
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+##Output a submiittable csv file.
+write.csv(submit, file = "output/RandomForest.csv", row.names = FALSE)
+fancyRpartPlot(fit)
+install.packages("randomForest")
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2, data=train, importance=TRUE, ntree=2000)
+Prediction <- predict(fit, test, type = "class")
+##Store the correct columns only in the submit variable
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/RandomForest.csv", row.names = FALSE)
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+# Install and load required packages for decision trees and forests
+install.packages('rpart')
+library(rpart)
+install.packages('randomForest')
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+install.packages("rpart")
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+# Install and load required packages for decision trees and forests
+install.packages('rpart')
+library(rpart)
+install.packages('randomForest')
+library(randomForest)
+install.packages('party')
+library(party)
+install.packages('rattle')
+install.packages('rpart.plot')
+install.packages('RColorBrewer')
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+# Join together the test and train sets for easier feature engineering
+test$Survived <- NA
+combi <- rbind(train, test)
+# Convert to a string
+combi$Name <- as.character(combi$Name)
+# Engineered variable: Title
+combi$Title <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
+combi$Title <- sub(' ', '', combi$Title)
+# Combine small title groups
+combi$Title[combi$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+combi$Title[combi$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+combi$Title[combi$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+# Convert to a factor
+combi$Title <- factor(combi$Title)
+# Engineered variable: Family size
+combi$FamilySize <- combi$SibSp + combi$Parch + 1
+# Engineered variable: Family
+combi$Surname <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
+combi$FamilyID <- paste(as.character(combi$FamilySize), combi$Surname, sep="")
+combi$FamilyID[combi$FamilySize <= 2] <- 'Small'
+# Delete erroneous family IDs
+famIDs <- data.frame(table(combi$FamilyID))
+famIDs <- famIDs[famIDs$Freq <= 2,]
+combi$FamilyID[combi$FamilyID %in% famIDs$Var1] <- 'Small'
+# Convert to a factor
+combi$FamilyID <- factor(combi$FamilyID)
+# Fill in Age NAs
+summary(combi$Age)
+Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize,
+data=combi[!is.na(combi$Age),], method="anova")
+combi$Age[is.na(combi$Age)] <- predict(Agefit, combi[is.na(combi$Age),])
+# Check what else might be missing
+summary(combi)
+# Fill in Embarked blanks
+summary(combi$Embarked)
+which(combi$Embarked == '')
+combi$Embarked[c(62,830)] = "S"
+combi$Embarked <- factor(combi$Embarked)
+# Fill in Fare NAs
+summary(combi$Fare)
+which(is.na(combi$Fare))
+combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE)
+# New factor for Random Forests, only allowed <32 levels, so reduce number
+combi$FamilyID2 <- combi$FamilyID
+# Convert back to string
+combi$FamilyID2 <- as.character(combi$FamilyID2)
+combi$FamilyID2[combi$FamilySize <= 3] <- 'Small'
+# And convert back to factor
+combi$FamilyID2 <- factor(combi$FamilyID2)
+# Split back into test and train sets
+train <- combi[1:891,]
+test <- combi[892:1309,]
+# Build Random Forest Ensemble
+set.seed(415)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+data=train, importance=TRUE, ntree=2000)
+# Look at variable importance
+varImpPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test)
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/firstTree.csv", row.names = FALSE)
+# Build condition inference tree Random Forest
+set.seed(415)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+fancyRpartPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/forest.csv", row.names = FALSE)
+fancyRpartPlot(fit)
+install.packages("rpart")
+install.packages("rpart")
+varImpPlot(fit)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+varImpPlot(fit)
+fancyRpartPlot(fit)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, data = train, controls=cforest_unbiased(ntree=3000, mtry=3))
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/forest.csv", row.names = FALSE)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+data=train, importance=TRUE, ntree=3000)
+varImpPlot(fit)
+varImpPlot(fit)
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+# Install and load required packages for decision trees and forests
+install.packages('rpart')
+library(rpart)
+install.packages('randomForest')
+library(randomForest)
+install.packages('party')
+library(party)
+install.packages('rattle')
+install.packages('rpart.plot')
+install.packages('RColorBrewer')
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+# Join together the test and train sets for easier feature engineering
+test$Survived <- NA
+combi <- rbind(train, test)
+# Convert to a string
+combi$Name <- as.character(combi$Name)
+# Engineered variable: Title
+combi$Title <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
+combi$Title <- sub(' ', '', combi$Title)
+# Combine small title groups
+combi$Title[combi$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+combi$Title[combi$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+combi$Title[combi$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+# Convert to a factor
+combi$Title <- factor(combi$Title)
+# Engineered variable: Family size
+combi$FamilySize <- combi$SibSp + combi$Parch + 1
+# Engineered variable: Family
+combi$Surname <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
+combi$FamilyID <- paste(as.character(combi$FamilySize), combi$Surname, sep="")
+combi$FamilyID[combi$FamilySize <= 2] <- 'Small'
+# Delete erroneous family IDs
+famIDs <- data.frame(table(combi$FamilyID))
+famIDs <- famIDs[famIDs$Freq <= 2,]
+combi$FamilyID[combi$FamilyID %in% famIDs$Var1] <- 'Small'
+# Convert to a factor
+combi$FamilyID <- factor(combi$FamilyID)
+# Fill in Age NAs
+summary(combi$Age)
+Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize,
+data=combi[!is.na(combi$Age),], method="anova")
+combi$Age[is.na(combi$Age)] <- predict(Agefit, combi[is.na(combi$Age),])
+# Check what else might be missing
+summary(combi)
+# Fill in Embarked blanks
+summary(combi$Embarked)
+which(combi$Embarked == '')
+combi$Embarked[c(62,830)] = "S"
+combi$Embarked <- factor(combi$Embarked)
+# Fill in Fare NAs
+summary(combi$Fare)
+which(is.na(combi$Fare))
+combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE)
+# New factor for Random Forests, only allowed <32 levels, so reduce number
+combi$FamilyID2 <- combi$FamilyID
+# Convert back to string
+combi$FamilyID2 <- as.character(combi$FamilyID2)
+combi$FamilyID2[combi$FamilySize <= 3] <- 'Small'
+# And convert back to factor
+combi$FamilyID2 <- factor(combi$FamilyID2)
+# Split back into test and train sets
+train <- combi[1:891,]
+test <- combi[892:1309,]
+# Build Random Forest Ensemble
+set.seed(415)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+data=train, importance=TRUE, ntree=3000)
+# Look at variable importance
+varImpPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test)
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/firstTree.csv", row.names = FALSE)
+# Build condition inference tree Random Forest
+set.seed(415)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, data = train, controls=cforest_unbiased(ntree=3000, mtry=3))
+fancyRpartPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/forest.csv", row.names = FALSE)
+varImpPlot(fit)
+install.packages("rpart")
+install.packages("rpart")
+#Mike Dean - Titanic Predictions Using R
+#Sets working directory
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+#Sets the train and test data to the csv files provided from Kaggle.com
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+##Sample the test data
+sample(1:10, replace = TRUE)
+combination <- rbind(train, test)
+summary(combination$Age)
+Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize, data=combination[!is.na(combination$Age),], method="anova")
+combination$Age[is.na(combination$Age)] <- predict(Agefit, combination[is.na(combination$Age),])
+summary(combination)
+summary(combination$Embarked)
+which(combination$Embarked == '')
+combination$Embarked[c(62, 830)] = "S"
+combination$Embarked <- factor(combination$Embarked)
+summary(combination$Fare)
+which(is.na(combination$Fare))
+combination$Fare[1024] <- median(combination$Fare, na.rm = TRUE)
+combination$FamilyID2 <- combination$FamilyID
+combination$FamilyID2 <- as.character(combination$FamilyID2)
+combination$FamilyID2[combination$FamilySize <= 3] <- 'Small'
+combination$FamilyID2 <- factor(combination$FamilyID2)
+train <- combination[1:891,]
+test <- combination[892:1309,]
+install.packages('randomForest')
+library(randomForest)
+set.seed(415)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2, data=train, importance=TRUE, ntree=2000)
+Prediction <- predict(fit, test, type = "class")
+##Store the correct columns only in the submit variable
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+##Output a submiittable csv file.
+write.csv(submit, file = "output/RandomForest.csv", row.names = FALSE)
+fancyRpartPlot(fit)
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+# Install and load required packages for decision trees and forests
+install.packages('rpart')
+library(rpart)
+install.packages('randomForest')
+library(randomForest)
+install.packages('party')
+library(party)
+install.packages('rattle')
+install.packages('rpart.plot')
+install.packages('RColorBrewer')
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+# Join together the test and train sets for easier feature engineering
+test$Survived <- NA
+combi <- rbind(train, test)
+# Convert to a string
+combi$Name <- as.character(combi$Name)
+# Engineered variable: Title
+combi$Title <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
+combi$Title <- sub(' ', '', combi$Title)
+# Combine small title groups
+combi$Title[combi$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+combi$Title[combi$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+combi$Title[combi$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+# Convert to a factor
+combi$Title <- factor(combi$Title)
+# Engineered variable: Family size
+combi$FamilySize <- combi$SibSp + combi$Parch + 1
+# Engineered variable: Family
+combi$Surname <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
+combi$FamilyID <- paste(as.character(combi$FamilySize), combi$Surname, sep="")
+combi$FamilyID[combi$FamilySize <= 2] <- 'Small'
+# Delete erroneous family IDs
+famIDs <- data.frame(table(combi$FamilyID))
+famIDs <- famIDs[famIDs$Freq <= 2,]
+combi$FamilyID[combi$FamilyID %in% famIDs$Var1] <- 'Small'
+# Convert to a factor
+combi$FamilyID <- factor(combi$FamilyID)
+# Fill in Age NAs
+summary(combi$Age)
+Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize,
+data=combi[!is.na(combi$Age),], method="anova")
+combi$Age[is.na(combi$Age)] <- predict(Agefit, combi[is.na(combi$Age),])
+# Check what else might be missing
+summary(combi)
+# Fill in Embarked blanks
+summary(combi$Embarked)
+which(combi$Embarked == '')
+combi$Embarked[c(62,830)] = "S"
+combi$Embarked <- factor(combi$Embarked)
+# Fill in Fare NAs
+summary(combi$Fare)
+which(is.na(combi$Fare))
+combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE)
+# New factor for Random Forests, only allowed <32 levels, so reduce number
+combi$FamilyID2 <- combi$FamilyID
+# Convert back to string
+combi$FamilyID2 <- as.character(combi$FamilyID2)
+combi$FamilyID2[combi$FamilySize <= 3] <- 'Small'
+# And convert back to factor
+combi$FamilyID2 <- factor(combi$FamilyID2)
+# Split back into test and train sets
+train <- combi[1:891,]
+test <- combi[892:1309,]
+# Build Random Forest Ensemble
+set.seed(415)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+data=train, importance=TRUE, ntree=3000)
+# Look at variable importance
+varImpPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test)
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/firstTree.csv", row.names = FALSE)
+# Build condition inference tree Random Forest
+set.seed(415)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, data = train, controls=cforest_unbiased(ntree=3000, mtry=3))
+fancyRpartPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/forest.csv", row.names = FALSE)
+varImpPlot(fit)
+install.packages("rpart")
+install.packages("randomForest")
+install.packages("party")
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+# Install and load required packages for decision trees and forests
+install.packages('rpart')
+library(rpart)
+install.packages('randomForest')
+library(randomForest)
+install.packages('party')
+library(party)
+install.packages('rattle')
+install.packages('rpart.plot')
+install.packages('RColorBrewer')
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+# Join together the test and train sets for easier feature engineering
+test$Survived <- NA
+combi <- rbind(train, test)
+# Convert to a string
+combi$Name <- as.character(combi$Name)
+# Engineered variable: Title
+combi$Title <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
+combi$Title <- sub(' ', '', combi$Title)
+# Combine small title groups
+combi$Title[combi$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+combi$Title[combi$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+combi$Title[combi$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+# Convert to a factor
+combi$Title <- factor(combi$Title)
+# Engineered variable: Family size
+combi$FamilySize <- combi$SibSp + combi$Parch + 1
+# Engineered variable: Family
+combi$Surname <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
+combi$FamilyID <- paste(as.character(combi$FamilySize), combi$Surname, sep="")
+combi$FamilyID[combi$FamilySize <= 2] <- 'Small'
+# Delete erroneous family IDs
+famIDs <- data.frame(table(combi$FamilyID))
+famIDs <- famIDs[famIDs$Freq <= 2,]
+combi$FamilyID[combi$FamilyID %in% famIDs$Var1] <- 'Small'
+# Convert to a factor
+combi$FamilyID <- factor(combi$FamilyID)
+# Fill in Age NAs
+summary(combi$Age)
+Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize,
+data=combi[!is.na(combi$Age),], method="anova")
+combi$Age[is.na(combi$Age)] <- predict(Agefit, combi[is.na(combi$Age),])
+# Check what else might be missing
+summary(combi)
+# Fill in Embarked blanks
+summary(combi$Embarked)
+which(combi$Embarked == '')
+combi$Embarked[c(62,830)] = "S"
+combi$Embarked <- factor(combi$Embarked)
+# Fill in Fare NAs
+summary(combi$Fare)
+which(is.na(combi$Fare))
+combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE)
+# New factor for Random Forests, only allowed <32 levels, so reduce number
+combi$FamilyID2 <- combi$FamilyID
+# Convert back to string
+combi$FamilyID2 <- as.character(combi$FamilyID2)
+combi$FamilyID2[combi$FamilySize <= 3] <- 'Small'
+# And convert back to factor
+combi$FamilyID2 <- factor(combi$FamilyID2)
+# Split back into test and train sets
+train <- combi[1:891,]
+test <- combi[892:1309,]
+# Build Random Forest Ensemble
+set.seed(415)
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+data=train, importance=TRUE, ntree=3000)
+# Look at variable importance
+varImpPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test)
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/firstTree.csv", row.names = FALSE)
+# Build condition inference tree Random Forest
+set.seed(415)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, data = train, controls=cforest_unbiased(ntree=3000, mtry=3))
+fancyRpartPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(submit, file = "output/forest.csv", row.names = FALSE)
+varImpPlot(fit)
+install.packages("randomForest")
+install.packages("party")
+install.packages("rpart")
+install.packages("rpart.plot")
+varImpPlot(fit)
+install.packages("RColorBrewer")
+install.packages("rattle")
+#Sets working directory
+setwd("C:/Users/Mike/Google Drive/School/2014 - 2015/Fall/Prediction/Final Project/R")
+train <- read.csv("data/train.csv")
+test <- read.csv("data/test.csv")
+install.packages('rattle')
+install.packages('rpart.plot')
+install.packages('RColorBrewer')
+library(rpart.plot)
+library(RColorBrewer)
+##Taking a look at the first name on the list.
+##Add a Survived column to the test data.
+##Bind the two datasets together starting with the training set and then the test set.
+combination <- rbind(train, test)
+combination$Name <- as.character(combination$Name)
+combination$Name[1]
+##Split the string into 3 strings corresponding with last name, salutation, and first + middle names.
+##Isolate the salutation.
+strsplit(combination$Name[1], split='[,.]')[[1]][2]
+##Apply the salutation isolation to all values in the Name column of the datafram.
+combination$Title <- sapply(combination$Name, FUN=function(x) {strsplit(x, split = '[,.]')[[1]][2]})
+table(combination$Title)
+##Combining rare titles
+combination$Title[combination$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+#Combining many male titles into Sir
+combination$Title[combination$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+combination$Title[combination$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+##Revert the strings back to a factor for analysis.
+combination$Title <- factor(combination$Title)
+combination$FamilySize <- combination$SibSp + combination$Parch + 1
+##Combining Siblings and Spouses with Parents and Children and add 1 for family size
+##Remove the space from the beginning of the title.
+##Convert the factorized strings back to regular strings.
+#Combining many female titles ino Lady
+#Sets the train and test data to the csv files provided from Kaggle.com
+strsplit(combination$Name[1], split='[,.]')
+#Combining Mademoiselle and Madame
+library(rattle)
+train$Name[1]
+strsplit(combination$Name[1], split='[,.]')[[1]]
+test$Survived <- NA
+#Create a new variable called surname.
+combination$Title <- sub(' ', '', combination$Title)
+##Setting up better visualization packages.
+combination$Surname <- sapply(combination$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
+#Create a family ID based on Surname and family size (this assumes there are no two families that are the same size with the same last name.)
+combination$FamilyID <- paste(as.character(combination$FamilySize), combination$Surname, sep = "")
+##Any family with 1 or 2 people is considered "Small".
+combination$FamilyID[combination$FamilySize <= 2] <- 'Small'
+##Take a look at the family IDs as a table
+table(combination$FamilyID)
+##Store this table as a dataframe.
+famIDs <- data.frame(table(combination$FamilyID))
+##Show the families considered to be "Small"
+famIDs <- famIDs[famIDs$Freq <= 2,]
+##Disassemble the combination dataset back into the train and test sets.
+train <- combination[1:891,]
+test <- combination[892:1309,]
+## Run a new decision tree including the newly engineered variables. ##
+fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+data=train, method="class")
+Prediction <- predict(fit, test, type = "class")
+##Store the correct columns only in the submit variable
+submit <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+##Output a submiittable csv file.
+write.csv(submit, file = "output/FeatureEngineering.csv", row.names = FALSE)
+fancyRpartPlot(fit)
